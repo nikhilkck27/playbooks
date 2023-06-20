@@ -1,0 +1,68 @@
+---
+# tasks/main.yml
+
+- name: Create Kafka installation directory
+  file:
+    path: " {{ kafka_installation_directory }} "
+    state: directory
+    mode: 0755
+
+- name: Download kafka binary
+  get_url: 
+    url: https://archive.apache.org/dist/kafka/{{ kafka_version }}/kafka-{{ kafka_version }}-src.tgz
+    dest: "/tmp/kafka.tgz"
+    mode: 0644
+
+- name: Extract Kafka archieve
+  ansible.builtin.unarchive:
+    src: "/tmp/kafka.tgz"
+    dest: "{{ kafka_installation_directory }}"
+    remote_src: true
+    extra_opts: --strip-components=1
+
+- name: Set ownership of kafka installation directory
+  file:
+    path: "{{ kafka_installation_directory }}"
+    owner: ansible
+    group: ansible
+    recurse: yes
+    state: directory
+
+
+#- name: Unarchive a file that is already on the remote machine
+#  ansible.builtin.unarchive:
+#    src: "/tmp/kafka.tgz"
+#    dest: "{{ kafka_installation_directory }}"
+#    remote_src: yes
+#    creates: "{{ kafka_installation_directory }}/kafka_{{ kafka_version }}"
+
+#- name: Extract Kafka Binary
+#  unarchive:
+#    src: "/tmp/kafka.tgz"
+#   dest: "{{ kafka_installation_directory }}"
+#    remote_src: yes
+#    creates: "{{ kafka_installation_directory }}/kafka_{{ kafka_version }}"
+
+- name: create kafka directory
+  file:
+    path: "{{ kafka_data_dir }}"
+    state: directory
+    mode: 0755
+  
+
+- name: configure kafka server properties
+  template: 
+    src: server.properties.j2
+    dest: "{{ kafka_installation_directory }}/kafka_{{ kafka_version }}/config/server.properties"
+    mode: 0644
+
+- name: start kafka server
+  command: "{{ kafka_installation_directory }}/kafka_{{ kafka_version }}/bin/kafka-server-start.sh daemon {{ kafka_installation_dir }}/kafka_{{ kafka_version }}/config/server.properties"
+  async: 0
+  poll: 0
+
+- name: wait for kafka server to start
+  wait_for:
+    port: 9092
+    delay: 5
+    timeout: 60

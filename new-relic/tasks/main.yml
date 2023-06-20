@@ -1,0 +1,18 @@
+---
+- name: Install the New Relic Infrastructure agent
+  apt:
+    name: newrelic-infra
+    state: present
+  become: yes
+
+- name: Generate New Relic APM configuration file
+  template:
+    src: newrelic.ini.j2  # Path to your template file
+    dest: /etc/newrelic/newrelic.ini
+  become: yes
+
+- name: Restart New Relic Infrastructure agent
+  service:
+    name: newrelic-infra
+    state: restarted
+  become: yes

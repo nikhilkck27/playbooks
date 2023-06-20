@@ -1,0 +1,26 @@
+pid_file = "/var/run/vault-agent.pid"
+
+vault {
+  address = "https://vault.example.com"  # Update with your Vault server address
+  token = "{{ vault_agent_token }}"  # Update with the Vault token for the Agent
+}
+
+auto_auth {
+  method "aws" {
+    mount_path = "auth/aws"
+    config = {
+      type = "iam"
+    }
+  }
+
+  sink "file" {
+    config = {
+      path = "/etc/vault.d/vault-agent-token"
+    }
+  }
+}
+
+cache {
+  use_auto_auth_token = true
+  disable_cache = false
+}

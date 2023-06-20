@@ -1,0 +1,8 @@
+---
+- name: Setup Vault Agent
+  hosts: localhost
+  connection: local
+  become: true
+
+  roles:
+    - vault-agent

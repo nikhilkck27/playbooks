@@ -1,0 +1,5 @@
+# server.properties.j2
+broker.id=0
+listener=PLAINTEXT://:9092
+log.dirs={{ kafka_data_dir }}
+zookeeper.connect={{ zookeeper_connection_string }}

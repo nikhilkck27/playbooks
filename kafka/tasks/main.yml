@@ -1,0 +1,49 @@
+---
+- name: Create Kafka installation directory
+  file:
+    path: "{{ kafka_installation_directory }}"
+    state: directory
+    mode: 0755
+
+- name: Download Kafka
+  get_url:
+    url: "{{ kafka_download_url }}"
+    dest: "/tmp/kafka_{{ kafka_version }}.tgz"
+    mode: 0644
+
+- name: Extract Kafka archive
+  unarchive:
+    src: "/tmp/kafka_{{ kafka_version }}.tgz"
+    dest: "{{ kafka_installation_directory }}"
+    remote_src: true
+    extra_opts: --strip-components=1
+
+- name: Set ownership of Kafka installation directory
+  file:
+    path: "{{ kafka_installation_directory }}"
+    owner: ansible
+    group: root
+    recurse: yes
+    state: directory
+
+- name: Set Kafka environment variables
+  become: yes
+  become_method: sudo
+  become_user: ansible
+  ansible_become_password: lowes123
+  lineinfile:
+    dest: "/etc/profile.d/kafka.sh"
+    line: 'export KAFKA_HOME="{{ kafka_installation_directory }}"'
+    state: present
+    create: yes
+
+- name: Reload shell environment
+  shell: source /etc/profile.d/kafka.sh
+  args:
+    executable: /bin/bash
+
+- name: Start ZooKeeper service
+  command: "{{ kafka_installation_directory }}/bin/zookeeper-server-start.sh -daemon {{ kafka_installation_directory }}/config/zookeeper.properties"
+
+- name: Start Kafka service
+  command: "{{ kafka_installation_directory }}/bin/kafka-server-start.sh -daemon {{ kafka_installation_directory }}/config/server.properties"
